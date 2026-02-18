@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # MongoDB - Banco NoSQL
+  mongodb:
+    image: docker.io/library/mongo:7.0
+    container_name: jbank-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: jbank
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - jbank-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ - Mensageria/Filas
+  rabbitmq:
+pod    image: docker.io/library/rabbitmq:3.12-management-alpine
+    container_name: jbank-rabbitmq
+    ports:
+      - "5672:5672"   # Porta AMQP (para aplicação)
+      - "15672:15672" # Porta Management UI (para visualizar filas)
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - jbank-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mongo Express - UI Web para MongoDB
+  mongo-express:
+    image: docker.io/library/mongo-express:latest
+    container_name: jbank-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin123@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    networks:
+      - jbank-network
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+networks:
+  jbank-network:
+    driver: bridge
