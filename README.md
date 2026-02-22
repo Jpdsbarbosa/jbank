@@ -175,4 +175,4 @@ Após dominar este projeto, você pode adicionar:
 
 ---
 
-**Desenvolvido para aprendizado antes de entrar no Stark Banking! 🚀**
+**Desenvolvido para aprendizado! 🚀**
